@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref, useTemplateRef } from 'vue'
-import { animate, spring, motion } from 'motion'
+import { ref, useTemplateRef, nextTick } from 'vue'
+import { animate, spring } from 'motion'
 import IconDate from './components/icons/IconDate.vue'
 import IconChevronDown from './components/icons/IconChevronDown.vue'
 import IconClose from './components/icons/IconClose.vue'
 
 const isOpen = ref(false)
-const datePicker = useTemplateRef("datePicker")
-onMounted(() => {
-  console.log(datePicker.value)
-})
-function toggleDatePicker() {
-  isOpen.value = !isOpen.value
-  const element = datePicker.value
+// Référence typée pour le date picker
+const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
 
-  if (isOpen.value) {
-    animate(
-      element,
+async function toggleDatePicker() {
+  isOpen.value = true
+  await nextTick()
+  if (isOpen.value && datePicker.value) {
+    await animate(
+      datePicker.value,
       { opacity: 1, transform: 'translateY(0)' },
-      { duration: 0.5, easing: spring() }
-    );
-  } 
-
+      { duration: 0.2, easing: spring() }
+    )
+  }else if(datePicker.value && !isOpen.value) {
+    animate(
+      datePicker.value,
+      { duration: 0.5, easing: spring() },
+      { opacity: 0, transform: 'translateY(40px)' }
+    )
+  }
 }
 </script>
 
@@ -36,12 +39,10 @@ function toggleDatePicker() {
         />
       </div>
       <div class="mt-10 flex items-center justify-end gap-4 p-5">
-        <motion.div
-          :initial="{ opacity: 0, y: 40 }"
-          :animate="{ opacity: 1, y: 0 }"
-          :exit="{ opacity: 0, y: 40 }"
+        <div
+          ref="datePicker"
           v-if="isOpen"
-          class="absolute top-10 right-0 p-4 rounded-lg w-full"
+          class="absolute top-10 right-0 p-4 rounded-lg opacity-0 w-full translate-y-10"
         >
           <div
             class="border rounded-full overflow-hidden h-10 relative flex items-center justify-between bg-slate-100"
@@ -58,12 +59,12 @@ function toggleDatePicker() {
             </div>
             <button
               class="h-10 w-10 flex items-center justify-center"
-              @click="toggleDatePicker"
+              @click="isOpen= false"
             >
               <IconClose />
             </button>
           </div>
-        </motion.div>
+        </div>
         <div
           class="bg-black/10 cursor-pointer p-2 rounded-full"
           @click="toggleDatePicker"
@@ -83,4 +84,5 @@ function toggleDatePicker() {
 </template>
 
 <style scoped>
+
 </style>
