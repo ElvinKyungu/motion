@@ -10,7 +10,7 @@ const isOpen = ref(false)
 const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
 
 async function toggleDatePicker() {
-  isOpen.value = !isOpen.value
+  isOpen.value = true
   await nextTick()
   if (isOpen.value && datePicker.value) {
     await animate(
@@ -18,13 +18,18 @@ async function toggleDatePicker() {
       { opacity: 1, transform: 'translateY(0)' },
       { duration: 0.2, type: spring, bounce: 0.5 }
     )
-  }else if(!isOpen.value && datePicker.value){ 
-    console.log('hello')
+  }
+}
+async function closeDatePicker() {
+  if (datePicker.value) {
     await animate(
       datePicker.value,
-      { duration: 0.5, easing: spring() },
-      { opacity: 0, transform: 'translateY(40px)' }
-    )
+      { opacity: 0, transform: 'translateY(40px)' },
+      { duration: 0.5, type: spring, bounce: 0.5 }
+    ).finished.then(() => {
+      // Ferme le datepicker après l'animation
+      isOpen.value = false
+    })
   }
 }
 </script>
@@ -43,7 +48,7 @@ async function toggleDatePicker() {
         <div
           ref="datePicker"
           v-if="isOpen"
-          class="absolute top-10 right-0 p-4 rounded-lg opacity-0 w-full translate-y-10"
+          class="absolute top-9 right-0 p-4 rounded-lg opacity-0 w-full translate-y-10"
         >
           <div
             class="border rounded-full overflow-hidden h-10 relative flex items-center justify-between bg-slate-100"
@@ -60,7 +65,7 @@ async function toggleDatePicker() {
             </div>
             <button
               class="h-10 w-10 flex items-center justify-center"
-              @click="toggleDatePicker"
+              @click="closeDatePicker"
             >
               <IconClose />
             </button>
