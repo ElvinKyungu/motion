@@ -10,16 +10,17 @@ const isOpen = ref(false)
 const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
 
 async function toggleDatePicker() {
-  isOpen.value = true
+  isOpen.value = !isOpen.value
   await nextTick()
   if (isOpen.value && datePicker.value) {
     await animate(
       datePicker.value,
       { opacity: 1, transform: 'translateY(0)' },
-      { duration: 0.2, easing: spring() }
+      { duration: 0.2, type: spring, bounce: 0.5 }
     )
-  }else if(datePicker.value && !isOpen.value) {
-    animate(
+  }else if(!isOpen.value && datePicker.value){ 
+    console.log('hello')
+    await animate(
       datePicker.value,
       { duration: 0.5, easing: spring() },
       { opacity: 0, transform: 'translateY(40px)' }
@@ -59,7 +60,7 @@ async function toggleDatePicker() {
             </div>
             <button
               class="h-10 w-10 flex items-center justify-center"
-              @click="isOpen= false"
+              @click="toggleDatePicker"
             >
               <IconClose />
             </button>
