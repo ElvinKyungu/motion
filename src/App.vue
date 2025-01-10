@@ -1,34 +1,45 @@
 <script setup lang="ts">
-import { ref, useTemplateRef, nextTick } from 'vue'
-import { animate, spring } from 'motion'
+import { useTemplateRef, nextTick } from 'vue'
+import { animate } from 'motion'
 import IconDate from './components/icons/IconDate.vue'
 import IconChevronDown from './components/icons/IconChevronDown.vue'
 import IconClose from './components/icons/IconClose.vue'
 
-const isOpen = ref(false)
 // Référence typée pour le date picker
 const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
 
 async function toggleDatePicker() {
-  isOpen.value = true
   await nextTick()
-  if (isOpen.value && datePicker.value) {
+  if (datePicker.value) {
+    animateScheduleButton('90%', 1)
     await animate(
       datePicker.value,
       { opacity: 1, transform: 'translateY(0)' },
-      { duration: 0.2, type: spring, bounce: 0.5 }
+      { duration: 0.3, type: 'spring'}
     )
   }
 }
+
+// Fonction pour animer le bouton Schedule de gauche vers la droite
+const animateScheduleButtonRef = useTemplateRef('animateScheduleButton')
+async function animateScheduleButton(width: string = '0%', opacity: number = 0) {
+  if (animateScheduleButtonRef.value) {
+    await animate(
+      animateScheduleButtonRef.value,
+      { width: width, opacity: opacity },
+      { duration: 0.7, type: 'spring' }
+    )
+  }
+}
+
 async function closeDatePicker() {
   if (datePicker.value) {
+    animateScheduleButton('0%', 0)
     await animate(
       datePicker.value,
       { opacity: 0, transform: 'translateY(40px)' },
-      { duration: 0.5, type: spring, bounce: 0.5 }
-    ).finished.then(() => {
-      // Ferme le datepicker après l'animation
-      isOpen.value = false
+      { duration: 0.5, type: 'spring', bounce: 0.5 }
+    ).then(() => {
     })
   }
 }
@@ -47,7 +58,6 @@ async function closeDatePicker() {
       <div class="mt-10 flex items-center justify-end gap-4 p-5">
         <div
           ref="datePicker"
-          v-if="isOpen"
           class="absolute top-9 right-0 p-4 rounded-lg opacity-0 w-full translate-y-10"
         >
           <div
@@ -64,7 +74,7 @@ async function closeDatePicker() {
               </div>
             </div>
             <button
-              class="h-10 w-10 flex items-center justify-center"
+              class="h-10 w-10 flex items-center justify-center cursor-pointer"
               @click="closeDatePicker"
             >
               <IconClose />
@@ -72,16 +82,22 @@ async function closeDatePicker() {
           </div>
         </div>
         <div
-          class="bg-black/10 cursor-pointer p-2 rounded-full"
+          class="bg-black/10 cursor-pointer p-2 rounded-full z-50"
           @click="toggleDatePicker"
         >
           <IconDate />
         </div>
-        <div>
+        <div class="w-full flex flex-col items-center center">
           <button
             class="flex text-center font-medium bg-black text-white rounded-full py-2 px-10"
           >
             Post
+          </button>
+          <button
+            ref="animateScheduleButton"
+            class="bg-black rounded-full absolute opacity-0 left-1/2 transform -translate-x-1/2 flex items-center justify-center px-5 py-2 text-white w-0"
+          >
+            Schedule
           </button>
         </div>
       </div>
