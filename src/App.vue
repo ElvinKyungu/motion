@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { useTemplateRef, nextTick } from 'vue'
+import { ref, computed, useTemplateRef, nextTick } from 'vue'
 import { animate } from 'motion'
 import IconDate from './components/icons/IconDate.vue'
 import IconChevronDown from './components/icons/IconChevronDown.vue'
 import IconClose from './components/icons/IconClose.vue'
+import "vue-select/dist/vue-select.css";
+import "flag-icons/css/flag-icons.min.css";
+import CurrencyConverter from '@/components/CurrencyConverter.vue'
 
 const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
 const scheduleButton = useTemplateRef<HTMLDivElement | null>('scheduleButton')
@@ -18,14 +21,14 @@ async function animateElement(
   }
 }
 
-function updateScheduleButton(width = '0%', opacity = 0) {
-  animateElement(scheduleButton.value, { width, opacity }, { duration: 0.7, type: 'spring' })
+function updateScheduleButton(width = '0%', opacity = 0, duration = 0.7) {
+  animateElement(scheduleButton.value, { width, opacity }, { duration: duration, type: 'spring' })
 }
 
 async function toggleDatePicker() {
   await nextTick()
   if (datePicker.value) {
-    updateScheduleButton('90%', 1)
+    updateScheduleButton('90%', 1, 0.7)
     animateElement(
       datePicker.value,
       { opacity: 1, transform: 'translateY(0)' },
@@ -36,8 +39,9 @@ async function toggleDatePicker() {
 
 // Fermeture du date picker
 function closeDatePicker() {
+  nextTick()
   if (datePicker.value) {
-    updateScheduleButton('0%', 0)
+    updateScheduleButton('0%', 0, 1)
     animateElement(
       datePicker.value,
       { opacity: 0, transform: 'translateY(40px)' },
@@ -49,7 +53,9 @@ function closeDatePicker() {
 
 <template>
   <main class="h-screen flex flex-col justify-center items-center">
-    <div class="border border-gray-300 p-4 rounded-3xl min-w-96 relative">
+    <CurrencyConverter />
+
+    <div class="border mt-10 border-gray-300 p-4 rounded-3xl min-w-96 relative">
       <div>
         <input
           type="search"
@@ -109,4 +115,5 @@ function closeDatePicker() {
 </template>
 
 <style scoped>
+
 </style>
