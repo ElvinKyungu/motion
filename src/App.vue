@@ -4,8 +4,8 @@ import { animate } from 'motion'
 import IconDate from './components/icons/IconDate.vue'
 import IconChevronDown from './components/icons/IconChevronDown.vue'
 import IconClose from './components/icons/IconClose.vue'
-import "vue-select/dist/vue-select.css";
-import "flag-icons/css/flag-icons.min.css";
+import 'vue-select/dist/vue-select.css'
+import 'flag-icons/css/flag-icons.min.css'
 import CurrencyConverter from '@/components/CurrencyConverter.vue'
 
 const datePicker = useTemplateRef<HTMLDivElement | null>('datePicker')
@@ -14,7 +14,7 @@ const scheduleButton = useTemplateRef<HTMLDivElement | null>('scheduleButton')
 async function animateElement(
   element: HTMLElement | null,
   keyframes: Record<string, any>,
-  options: Record<string, any>
+  options: Record<string, any>,
 ) {
   if (element) {
     await animate(element, keyframes, options)
@@ -32,7 +32,7 @@ async function toggleDatePicker() {
     animateElement(
       datePicker.value,
       { opacity: 1, transform: 'translateY(0)' },
-      { duration: 0.3, type: 'spring' }
+      { duration: 0.3, type: 'spring' },
     )
   }
 }
@@ -45,7 +45,7 @@ function closeDatePicker() {
     animateElement(
       datePicker.value,
       { opacity: 0, transform: 'translateY(40px)' },
-      { duration: 0.5, type: 'spring', bounce: 0.5 }
+      { duration: 0.5, type: 'spring', bounce: 0.5 },
     )
   }
 }
@@ -55,6 +55,7 @@ function closeDatePicker() {
   <main class="h-screen flex flex-col justify-center items-center">
     <CurrencyConverter />
 
+    <!-- 
     <div class="border mt-10 border-gray-300 p-4 rounded-3xl min-w-96 relative">
       <div>
         <input
@@ -64,7 +65,6 @@ function closeDatePicker() {
         />
       </div>
       <div class="mt-10 flex items-center justify-end gap-4 p-5">
-        <!-- Date Picker -->
         <div
           ref="datePicker"
           class="absolute top-9 right-0 p-4 rounded-lg opacity-0 w-full translate-y-10"
@@ -88,8 +88,6 @@ function closeDatePicker() {
             </button>
           </div>
         </div>
-
-        <!-- Icon Date -->
         <div
           class="bg-black/10 cursor-pointer p-2 rounded-full z-50"
           @click="toggleDatePicker"
@@ -97,7 +95,6 @@ function closeDatePicker() {
           <IconDate />
         </div>
 
-        <!-- Schedule Button -->
         <div class="w-full flex flex-col items-center center">
           <button class="flex text-center font-medium bg-black text-white rounded-full py-2 px-10">
             Post
@@ -110,10 +107,8 @@ function closeDatePicker() {
           </button>
         </div>
       </div>
-    </div>
+    </div> -->
   </main>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
