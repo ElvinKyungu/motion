@@ -85,9 +85,8 @@ const selectCurrency = (type: 'from' | 'to', currency: Currency) => {
   closeDropdownWithAnimation(type)
 }
 
-
-const { value, next } = useCycle([543, 12000, -3200]);
-useRootClick(next);
+const { value, next } = useCycle([543, 12000, -3200])
+useRootClick(next)
 </script>
 
 <template>
