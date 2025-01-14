@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue';
-import { onClickOutside } from '@vueuse/core'
-import type { Currency } from '../types/Currency';
-import axios from 'axios';
-import { animate } from 'motion';
-import IconChevronDown from './icons/IconChevronDown.vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue'
+import type { Currency } from '../types/Currency'
+import axios from 'axios'
+import { animate } from 'motion'
+import IconChevronDown from './icons/IconChevronDown.vue'
+import NumberFlow from '@number-flow/vue'
+import { useCycle } from '@/composables/useCycle'
+import { useRootClick } from '@/composables/useRootClick'
 
 const currencies: Currency[] = [
   { code: 'USD', name: 'Dollar américain', flag: 'US', symbol: '$' },
@@ -12,86 +14,85 @@ const currencies: Currency[] = [
   { code: 'CDF', name: 'Franc congolais', flag: 'CD', symbol: 'FC' },
   { code: 'XAF', name: 'Franc CFA', flag: 'CM', symbol: 'FCFA' },
   { code: 'AUD', name: 'Dollar australien', flag: 'AU', symbol: '$' },
-];
+]
 
-const amount = ref(1);
-const fromCurrency = ref(currencies[0]);
-const toCurrency = ref(currencies[1]);
-const exchangeRate = ref(0);
-const loading = ref(false);
+const amount = ref(1)
+const fromCurrency = ref(currencies[0])
+const toCurrency = ref(currencies[1])
+const exchangeRate = ref(0)
+const loading = ref(false)
 const state = reactive({
   fromDropdownOpen: false,
   toDropdownOpen: false,
-});
+})
 
 const convertedAmount = computed(() => {
-  return (amount.value * exchangeRate.value).toFixed(2);
-});
+  return (amount.value * exchangeRate.value).toFixed(2)
+})
 
 async function getExchangeRate() {
-  loading.value = true;
+  loading.value = true
   try {
-    const response = await axios.get(`https://api.exchangerate-api.com/v4/latest/${fromCurrency.value.code}`);
-    exchangeRate.value = response.data.rates[toCurrency.value.code];
+    const response = await axios.get(
+      `https://api.exchangerate-api.com/v4/latest/${fromCurrency.value.code}`,
+    )
+    exchangeRate.value = response.data.rates[toCurrency.value.code]
   } catch (error) {
-    console.error('Erreur lors de la récupération du taux de change:', error);
+    console.error('Erreur lors de la récupération du taux de change:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 async function updateRate() {
-  await getExchangeRate();
+  await getExchangeRate()
 }
 
 watch([fromCurrency, toCurrency], () => {
-  updateRate();
-});
+  updateRate()
+})
 
 onMounted(() => {
   updateRate()
-});
+})
 
 const toggleDropdown = (type: 'from' | 'to') => {
-  if (type === 'from') state.fromDropdownOpen = !state.fromDropdownOpen;
-  if (type === 'to') state.toDropdownOpen = !state.toDropdownOpen;
+  if (type === 'from') state.fromDropdownOpen = !state.fromDropdownOpen
+  if (type === 'to') state.toDropdownOpen = !state.toDropdownOpen
 
-  const dropdown = document.querySelector(`.${type}-dropdown-list`) as HTMLElement;
+  const dropdown = document.querySelector(`.${type}-dropdown-list`) as HTMLElement
   if (dropdown && state[`${type}DropdownOpen`]) {
-    animate(dropdown, { opacity: [0, 1], y: [20, 0] }, { duration: 0.5, easing: 'spring(1, 80, 10, 0)' });
+    animate(
+      dropdown,
+      { opacity: [0, 1], y: [20, 0] },
+      { duration: 0.5, easing: 'spring(1, 80, 10, 0)' },
+    )
   }
-};
+}
 
 const closeDropdownWithAnimation = (type: 'from' | 'to') => {
-  const dropdown = document.querySelector(`.${type}-dropdown-list`) as HTMLElement;
+  const dropdown = document.querySelector(`.${type}-dropdown-list`) as HTMLElement
   if (dropdown && state[`${type}DropdownOpen`]) {
     animate(dropdown, { opacity: [1, 0], y: [0, 20] }, { duration: 0.4 }).then(() => {
-      state[`${type}DropdownOpen`] = false;
-    });
+      state[`${type}DropdownOpen`] = false
+    })
   }
-};
+}
 
 const selectCurrency = (type: 'from' | 'to', currency: Currency) => {
-  if (type === 'from') fromCurrency.value = currency;
-  if (type === 'to') toCurrency.value = currency;
-  closeDropdownWithAnimation(type);
-};
+  if (type === 'from') fromCurrency.value = currency
+  if (type === 'to') toCurrency.value = currency
+  closeDropdownWithAnimation(type)
+}
 
-// Detect clicks outside dropdowns
-// const dropdownRefs = reactive({
-//   from: null as HTMLElement | null,
-//   to: null as HTMLElement | null,
-// })
 
-const from = ref(null)
-const to = ref(null)
-
-onClickOutside(from.value, () => closeDropdownWithAnimation('from'));
-onClickOutside(to.value, () => closeDropdownWithAnimation('to'))
+const { value, next } = useCycle([543, 12000, -3200]);
+useRootClick(next);
 </script>
 
 <template>
   <div class="w-[42rem] mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <NumberFlow :value :trend="0" :format="{ notation: 'compact' }" />
     <h1 class="text-3xl font-bold text-center mb-8">Convertisseur de Devises</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="col-span-full">
@@ -113,7 +114,7 @@ onClickOutside(to.value, () => closeDropdownWithAnimation('to'))
             <span :class="`fi fi-${fromCurrency.flag.toLowerCase()}`"></span>
             {{ fromCurrency.code }} - {{ fromCurrency.name }}
           </span>
-          <IconChevronDown class="w-5 h-5"/>
+          <IconChevronDown class="w-5 h-5" />
         </button>
         <ul
           v-show="state.fromDropdownOpen"
@@ -140,7 +141,7 @@ onClickOutside(to.value, () => closeDropdownWithAnimation('to'))
             <span :class="`fi fi-${toCurrency.flag.toLowerCase()}`"></span>
             {{ toCurrency.code }} - {{ toCurrency.name }}
           </span>
-          <IconChevronDown class="w-5 h-5"/>
+          <IconChevronDown class="w-5 h-5" />
         </button>
         <ul
           v-show="state.toDropdownOpen"
@@ -165,7 +166,7 @@ onClickOutside(to.value, () => closeDropdownWithAnimation('to'))
       <div v-else class="text-center">
         <p class="text-xl flex items-center justify-center gap-2">
           <span :class="`fi fi-${fromCurrency.flag.toLowerCase()}`"></span>
-          {{ amount }} {{ fromCurrency.symbol }} = 
+          {{ amount }} {{ fromCurrency.symbol }} =
           <span :class="`fi fi-${toCurrency.flag.toLowerCase()}`"></span>
           {{ convertedAmount }} {{ toCurrency.symbol }}
         </p>
