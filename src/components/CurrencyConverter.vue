@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import type { Currency } from '../types/Currency'
 import axios from 'axios'
 import { animate } from 'motion'
@@ -17,41 +17,50 @@ const currencies: Currency[] = [
 const amount = ref(1)
 const fromCurrency = ref(currencies[0])
 const toCurrency = ref(currencies[1])
-const exchangeRate = ref(0)
+const exchangeRates = ref<Record<string, Record<string, number>>>({})
 const loading = ref(false)
+const updateKey = ref(0)
 const state = reactive({
   fromDropdownOpen: false,
   toDropdownOpen: false,
 })
 
-const convertedAmount = computed(() => {
-  return (amount.value * exchangeRate.value).toFixed(2)
+const currentRate = computed(() => {
+  if (!exchangeRates.value[fromCurrency.value.code]) return 0
+  return exchangeRates.value[fromCurrency.value.code][toCurrency.value.code] || 0
 })
 
-async function getExchangeRate() {
+const totalAmount = computed(() => {
+  return currentRate.value * amount.value
+})
+
+async function fetchAllExchangeRates() {
   loading.value = true
   try {
-    const response = await axios.get(
-      `https://api.exchangerate-api.com/v4/latest/${fromCurrency.value.code}`,
-    )
-    exchangeRate.value = response.data.rates[toCurrency.value.code]
+    const promises = currencies.map(async (currency) => {
+      const response = await axios.get(
+        `https://api.exchangerate-api.com/v4/latest/${currency.code}`,
+      )
+      exchangeRates.value[currency.code] = response.data.rates
+    })
+    await Promise.all(promises)
   } catch (error) {
-    console.error('Erreur lors de la récupération du taux de change:', error)
+    console.error('Erreur lors de la récupération des taux de change:', error)
   } finally {
     loading.value = false
   }
 }
 
-async function updateRate() {
-  await getExchangeRate()
-}
+watch(
+  [() => fromCurrency.value.code, () => toCurrency.value.code, amount],
+  async () => {
+    await nextTick()
+    updateKey.value++
+  }
+)
 
-watch([fromCurrency, toCurrency], () => {
-  updateRate()
-})
-
-onMounted(() => {
-  updateRate()
+onMounted(async () => {
+  await fetchAllExchangeRates()
 })
 
 const toggleDropdown = (type: 'from' | 'to') => {
@@ -82,62 +91,10 @@ const selectCurrency = (type: 'from' | 'to', currency: Currency) => {
   if (type === 'to') toCurrency.value = currency
   closeDropdownWithAnimation(type)
 }
-const value = ref(1000); // Valeur initiale du compteur
-const diff = ref(0); // Différence pour le pourcentage
-
-function increment() {
-  const oldValue = value.value;
-  value.value += 100; // Incrément de 100
-  diff.value = (value.value - oldValue) / oldValue; // Calcul de la différence en pourcentage
-}
-
-function decrement() {
-  const oldValue = value.value;
-  value.value -= 100; // Décrément de 100
-  diff.value = (value.value - oldValue) / oldValue; // Calcul de la différence en pourcentage
-}
 </script>
 
 <template>
   <div class="w-[42rem] mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <NumberFlowGroup>
-      <div
-        style="--number-flow-char-height: 0.85em"
-        class="flex items-center gap-4 font-semibold"
-      >
-        <div class="flex gap-5">
-          <button
-            class="bg-indigo-500 text-white p-3 rounded-md"
-            @click="increment"
-          >
-            Incrémenter
-          </button>
-          <button
-            class="bg-indigo-500 text-white p-3 rounded-md"
-            @click="decrement"
-          >
-            Décrementer
-          </button>
-        </div>
-    
-        <!-- Nombre principal avec format de devise -->
-        <NumberFlow
-          :value="value"
-          :format="{ style: 'currency', currency: 'USD' }"
-          class="~text-2xl/4xl"
-        />
-    
-        <!-- Différence en pourcentage -->
-        <NumberFlow
-          :value="diff"
-          :format="{ style: 'percent', maximumFractionDigits: 2, signDisplay: 'always' }"
-          :class="[
-            '~text-lg/2xl transition-colors duration-300',
-            diff < 0 ? 'text-red-500' : 'text-emerald-500'
-          ]"
-        />
-      </div>
-    </NumberFlowGroup>
     <h1 class="text-3xl font-bold text-center mb-8">Convertisseur de Devises</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="col-span-full">
@@ -145,7 +102,7 @@ function decrement() {
         <input
           type="number"
           v-model="amount"
-          class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full p-3 border border-gray-300 rounded-md outline-none"
           min="0"
         />
       </div>
@@ -211,15 +168,28 @@ function decrement() {
       <div v-else class="text-center">
         <p class="text-xl flex items-center justify-center gap-2">
           <span :class="`fi fi-${fromCurrency.flag.toLowerCase()}`"></span>
-          {{ amount }} {{ fromCurrency.symbol }} =
+          <NumberFlow
+            :value="amount"
+            :format="{ style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }"
+            class="~text-lg"
+          />
+          {{ fromCurrency.symbol }} =
           <span :class="`fi fi-${toCurrency.flag.toLowerCase()}`"></span>
-          {{ convertedAmount }} {{ toCurrency.symbol }}
+          <NumberFlow
+            :value="totalAmount"
+            :format="{ style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }"
+            class="~text-lg"
+          />
+          {{ toCurrency.symbol }}
         </p>
         <p class="text-sm text-gray-600 mt-2">
+          Taux: 1 {{ fromCurrency.code }} = 
           <NumberFlow
-            :value="1"
-          />
-          {{ fromCurrency.code }} = {{ exchangeRate }} {{ toCurrency.code }}
+            :value="currentRate.toFixed(2)"
+            :format="{ style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }"
+            class="~text-lg"
+          /> 
+          {{ toCurrency.code }}
         </p>
       </div>
     </div>
