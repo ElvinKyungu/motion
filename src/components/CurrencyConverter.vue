@@ -4,9 +4,7 @@ import type { Currency } from '../types/Currency'
 import axios from 'axios'
 import { animate } from 'motion'
 import IconChevronDown from './icons/IconChevronDown.vue'
-import NumberFlow from '@number-flow/vue'
-import { useCycle } from '@/composables/useCycle'
-import { useRootClick } from '@/composables/useRootClick'
+import NumberFlow, { NumberFlowGroup } from '@number-flow/vue'
 
 const currencies: Currency[] = [
   { code: 'USD', name: 'Dollar américain', flag: 'US', symbol: '$' },
@@ -84,14 +82,62 @@ const selectCurrency = (type: 'from' | 'to', currency: Currency) => {
   if (type === 'to') toCurrency.value = currency
   closeDropdownWithAnimation(type)
 }
+const value = ref(1000); // Valeur initiale du compteur
+const diff = ref(0); // Différence pour le pourcentage
 
-const { value, next } = useCycle([543, 12000, -3200])
-useRootClick(next)
+function increment() {
+  const oldValue = value.value;
+  value.value += 100; // Incrément de 100
+  diff.value = (value.value - oldValue) / oldValue; // Calcul de la différence en pourcentage
+}
+
+function decrement() {
+  const oldValue = value.value;
+  value.value -= 100; // Décrément de 100
+  diff.value = (value.value - oldValue) / oldValue; // Calcul de la différence en pourcentage
+}
 </script>
 
 <template>
   <div class="w-[42rem] mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <NumberFlow :value :trend="0" :format="{ notation: 'compact' }" />
+    <NumberFlowGroup>
+      <div
+        style="--number-flow-char-height: 0.85em"
+        class="flex items-center gap-4 font-semibold"
+      >
+        <div class="flex gap-5">
+          <button
+            class="bg-indigo-500 text-white p-3 rounded-md"
+            @click="increment"
+          >
+            Incrémenter
+          </button>
+          <button
+            class="bg-indigo-500 text-white p-3 rounded-md"
+            @click="decrement"
+          >
+            Décrementer
+          </button>
+        </div>
+    
+        <!-- Nombre principal avec format de devise -->
+        <NumberFlow
+          :value="value"
+          :format="{ style: 'currency', currency: 'USD' }"
+          class="~text-2xl/4xl"
+        />
+    
+        <!-- Différence en pourcentage -->
+        <NumberFlow
+          :value="diff"
+          :format="{ style: 'percent', maximumFractionDigits: 2, signDisplay: 'always' }"
+          :class="[
+            '~text-lg/2xl transition-colors duration-300',
+            diff < 0 ? 'text-red-500' : 'text-emerald-500'
+          ]"
+        />
+      </div>
+    </NumberFlowGroup>
     <h1 class="text-3xl font-bold text-center mb-8">Convertisseur de Devises</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="col-span-full">
@@ -170,7 +216,10 @@ useRootClick(next)
           {{ convertedAmount }} {{ toCurrency.symbol }}
         </p>
         <p class="text-sm text-gray-600 mt-2">
-          1 {{ fromCurrency.code }} = {{ exchangeRate }} {{ toCurrency.code }}
+          <NumberFlow
+            :value="1"
+          />
+          {{ fromCurrency.code }} = {{ exchangeRate }} {{ toCurrency.code }}
         </p>
       </div>
     </div>
