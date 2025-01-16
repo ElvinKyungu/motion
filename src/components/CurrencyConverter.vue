@@ -4,7 +4,7 @@ import type { Currency } from '../types/Currency'
 import axios from 'axios'
 import { animate } from 'motion'
 import IconChevronDown from './icons/IconChevronDown.vue'
-import NumberFlow, { NumberFlowGroup } from '@number-flow/vue'
+import NumberFlow from '@number-flow/vue'
 
 const currencies: Currency[] = [
   { code: 'USD', name: 'Dollar américain', flag: 'US', symbol: '$' },
