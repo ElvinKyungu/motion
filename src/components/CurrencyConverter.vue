@@ -51,6 +51,9 @@ async function fetchAllExchangeRates() {
   }
 }
 
+const sayHello = ()=>{
+  console.log('')
+}
 watch(
   [() => fromCurrency.value.code, () => toCurrency.value.code, amount],
   async () => {
