@@ -51,13 +51,10 @@ async function fetchAllExchangeRates() {
   }
 }
 
-watch(
-  [() => fromCurrency.value.code, () => toCurrency.value.code, amount],
-  async () => {
-    await nextTick()
-    updateKey.value++
-  }
-)
+watch([() => fromCurrency.value.code, () => toCurrency.value.code, amount], async () => {
+  await nextTick()
+  updateKey.value++
+})
 
 onMounted(async () => {
   await fetchAllExchangeRates()
@@ -183,12 +180,12 @@ const selectCurrency = (type: 'from' | 'to', currency: Currency) => {
           {{ toCurrency.symbol }}
         </p>
         <p class="text-sm text-gray-600 mt-2">
-          Taux: 1 {{ fromCurrency.code }} = 
+          Taux: 1 {{ fromCurrency.code }} =
           <NumberFlow
             :value="currentRate.toFixed(2)"
             :format="{ style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }"
             class="~text-lg"
-          /> 
+          />
           {{ toCurrency.code }}
         </p>
       </div>
